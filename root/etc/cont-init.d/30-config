@@ -32,12 +32,12 @@
 [[ ! -L /app/calibre-web/gdrive.db ]] && \
 	ln -s /config/gdrive.db /app/calibre-web/gdrive.db
 
-# make folders
+#ï¿½make folders
 mkdir -p \
 	/config/log \
 	/config/cache
 
-# copy config
+#ï¿½copy config
 [[ ! -e /config/config.ini ]] && \
 	cp /defaults/config.ini /config/config.ini
 
