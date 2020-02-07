@@ -32,7 +32,19 @@
 [[ ! -L /app/calibre-web/gdrive.db ]] && \
 	ln -s /config/gdrive.db /app/calibre-web/gdrive.db
 
+# make folders
+mkdir -p \
+	/config/log \
+	/config/cache
+
+# copy config
+[[ ! -e /config/config.ini ]] && \
+	cp /defaults/config.ini /config/config.ini
+
+# update version.txt
+cp /defaults/version.txt /config/cache/version.txt
+
 # permissions
 chown -R abc:abc \
 	/config \
-	/app/calibre-web
+	/app

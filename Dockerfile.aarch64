@@ -3,6 +3,7 @@ FROM lsiobase/ubuntu:arm64v8-bionic
 # set version label
 ARG BUILD_DATE
 ARG VERSION
+ARG LAZYLIBRARIAN_COMMIT
 ARG CALIBREWEB_RELEASE
 LABEL build_version="Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}"
 LABEL maintainer="chbmb"
@@ -16,20 +17,28 @@ RUN \
 	git \
 	libffi-dev \
 	libjpeg-dev \
+	libjpeg-turbo8-dev \
 	libldap2-dev \
 	libsasl2-dev \
 	libxml2-dev \
+	libxslt-dev \
 	libxslt1-dev \
+	python-dev \
 	python3-pip \
 	zlib1g-dev && \
  echo "**** install runtime packages ****" && \
  apt-get install -y \
+	calibre \
+	ghostscript \
 	imagemagick \
+	libjpeg-turbo8 \
 	libldap-2.4-2 \
 	libnss3 \
 	libsasl2-2 \
 	libxcomposite1 \
 	python3-minimal \
+	python3-openssl \
+	zlib1g \
 	unrar && \
  echo "**** install calibre-web ****" && \
  if [ -z ${CALIBREWEB_RELEASE+x} ]; then \
@@ -49,6 +58,25 @@ RUN \
 	requirements.txt && \
  pip3 install --no-cache-dir -U -r \
 	optional-requirements.txt && \
+	 echo "**** install lazylibrarian ****" && \
+ mkdir -p \
+	/app/lazylibrarian && \
+ if [ -z ${LAZYLIBRARIAN_COMMIT+x} ]; then \
+ 	LAZYLIBRARIAN_COMMIT=$(curl -sX GET "https://gitlab.com/api/v4/projects/9317860/repository/commits/master" \
+    	| awk '/id/{print $4;exit}' FS='[""]'); \
+ fi && \
+ echo "Installing from commit ${LAZYLIBRARIAN_COMMIT}" && \
+ echo "${LAZYLIBRARIAN_COMMIT}" > /defaults/version.txt && \
+ curl -o \
+ /tmp/lazylibrarian.tar.gz -L \
+	"https://gitlab.com/LazyLibrarian/LazyLibrarian/repository/archive.tar.gz?sha={$LAZYLIBRARIAN_COMMIT}" && \
+ tar xf \
+ /tmp/lazylibrarian.tar.gz -C \
+	/app/lazylibrarian --strip-components=1 && \
+ cd /app/lazylibrarian && \
+ pip3 install --no-cache-dir -U \
+	apprise \
+	Pillow && \
  echo "**** cleanup ****" && \
  apt-get -y purge \
 	g++ \
@@ -56,10 +84,13 @@ RUN \
 	git \
 	libffi-dev \
 	libjpeg-dev \
+	libjpeg-turbo8-dev \
 	libldap2-dev \
 	libsasl2-dev \
 	libxml2-dev \
+	libxslt-dev \
 	libxslt1-dev \
+	python-dev \
 	python3-pip \
 	zlib1g-dev && \
  apt-get -y autoremove && \
@@ -73,4 +104,6 @@ COPY root/ /
 
 # ports and volumes
 EXPOSE 8083
+EXPOSE 5299
+VOLUME /books /config
 VOLUME /books /config
